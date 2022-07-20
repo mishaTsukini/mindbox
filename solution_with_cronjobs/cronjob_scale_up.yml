@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: scale-down-job
+spec:
+  # at 11:55 
+  schedule: "55 11 * * *"  
+  #храним в истории только последний фейл
+  successfulJobsHistoryLimit: 0
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure 
+          containers:
+          - name: kubectl
+            image: bitnami/kubectl:1.22.12
+            imagePullPolicy: IfNotPresent
+            #скейлим кол-во реплик в деплойментах с лейблом test-task-deploy в дневное время до 4
+            args: 
+              - scale
+              - deployment
+              - -l
+              - type=test-task-deploy
+              - --replicas=4
